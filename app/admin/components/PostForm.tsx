@@ -15,9 +15,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import ReactMarkdown from "react-markdown";
 import { X } from "lucide-react";
-import Image from "next/image";
+// import Image from "next/image"; // not used
 import { useCategoriesStore } from "@/store/categories/CategoriesStore";
 import { Spinner } from "@/components/ui/spinner";
+import { usePostsStore } from "@/store/posts/PostsStore";
 
 export default function PostForm() {
   const router = useRouter();
@@ -28,6 +29,7 @@ export default function PostForm() {
     error: catsError,
     fetchCategories,
   } = useCategoriesStore();
+  const { createPost } = usePostsStore();
 
   const [formData, setFormData] = useState({
     title: "",
@@ -35,10 +37,12 @@ export default function PostForm() {
     image: "",
     content: "",
     categoryIds: [] as number[],
+    published: false,
   });
   const [preview, setPreview] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   // Fetch categories on mount if not loaded
   useEffect(() => {
@@ -111,35 +115,41 @@ export default function PostForm() {
     return newErrors;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  // publish: true -> Publish; false -> Save as draft
+  const handleSubmit = async (e: React.FormEvent | null, publish: boolean) => {
+    if (e) e.preventDefault();
     const newErrors = validateForm();
-
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
-
-    console.log(" Post Data Submitted:", {
-      title: formData.title,
-      description: formData.description,
-      image: formData.image,
-      content: formData.content,
-      categoryIds: formData.categoryIds,
-      timestamp: new Date().toISOString(),
-    });
-
-    // Reset form
-    setFormData({
-      title: "",
-      description: "",
-      image: "",
-      content: "",
-      categoryIds: [],
-    });
-
-    // Redirect back to posts page
-    router.push("/admin/posts");
+    setSubmitting(true);
+    try {
+      const payload = {
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        image: formData.image.trim(),
+        content: formData.content.trim(),
+        categoryIds: formData.categoryIds,
+        published: publish,
+      };
+      console.log(publish ? "Publishing post:" : "Saving draft:", payload);
+      // Reset form
+      setFormData({
+        title: "",
+        description: "",
+        image: "",
+        content: "",
+        categoryIds: [],
+        published: false,
+      });
+      router.push("/admin/posts");
+    } catch (err) {
+      // surface a generic error
+      setErrors((prev) => ({ ...prev, root: "Failed to save post" }));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const selectedCategories = categories.filter((cat) =>
@@ -164,7 +174,10 @@ export default function PostForm() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form
+                onSubmit={(e) => handleSubmit(e, true)}
+                className="space-y-6"
+              >
                 {/* Title */}
                 <div className="space-y-2">
                   <label htmlFor="title" className="text-sm font-medium">
@@ -248,6 +261,7 @@ export default function PostForm() {
                   )}
                 </div>
 
+                {/* Categories */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium">
                     Categories (Max 3)
@@ -331,14 +345,42 @@ export default function PostForm() {
 
                 {/* Form Actions */}
                 <div className="flex gap-3 pt-4">
-                  <Button type="submit" className="cursor-pointer">
-                    Publish Post
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => handleSubmit(null, false)}
+                    className="cursor-pointer"
+                    disabled={submitting}
+                  >
+                    {submitting ? (
+                      <span className="inline-flex items-center gap-2">
+                        <Spinner size={16} />
+                        Saving…
+                      </span>
+                    ) : (
+                      "Save Draft"
+                    )}
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="cursor-pointer"
+                    disabled={submitting}
+                  >
+                    {submitting ? (
+                      <span className="inline-flex items-center gap-2">
+                        <Spinner size={16} />
+                        Publishing…
+                      </span>
+                    ) : (
+                      "Publish Post"
+                    )}
                   </Button>
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => router.push("/admin/posts")}
                     className="cursor-pointer"
+                    disabled={submitting}
                   >
                     Cancel
                   </Button>
