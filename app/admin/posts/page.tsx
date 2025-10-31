@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Card,
   CardContent,
@@ -6,8 +8,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 export default function PostsPage() {
+  const router = useRouter();
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -15,7 +19,9 @@ export default function PostsPage() {
           <h1 className="text-3xl font-bold tracking-tight">Posts</h1>
           <p className="text-muted-foreground">Manage your blog posts</p>
         </div>
-        <Button>Create Post</Button>
+        <Button onClick={() => router.push("/admin/posts/create")}>
+          Create Post
+        </Button>
       </div>
 
       <Card>
