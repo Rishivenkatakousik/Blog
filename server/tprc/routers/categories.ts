@@ -3,7 +3,7 @@ import { z } from "zod";
 import { db } from "../../db/client";
 import { categories } from "../../db/schema";
 import { categorySchema } from "../validators";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm"; // <- added sql
 import { slugify } from "../../utils/slugify";
 import { formatError } from "../../utils/formatError";
 
@@ -24,6 +24,18 @@ export const categoriesRouter = router({
   getAll: publicProcedure.query(async () => {
     try {
       return await db.select().from(categories);
+    } catch (error) {
+      throw new Error(formatError(error));
+    }
+  }),
+
+  // count of categories
+  count: publicProcedure.query(async () => {
+    try {
+      const [{ count }] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(categories);
+      return Number(count);
     } catch (error) {
       throw new Error(formatError(error));
     }

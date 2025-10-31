@@ -98,7 +98,7 @@ export function CategoryForm({
           </div>
           <button
             onClick={onClose}
-            className="text-muted-foreground hover:text-foreground transition-colors"
+            className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -140,10 +140,15 @@ export function CategoryForm({
             </div>
 
             <div className="flex gap-2 justify-end pt-4">
-              <Button type="button" variant="outline" onClick={onClose}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                className="cursor-pointer"
+              >
                 Cancel
               </Button>
-              <Button type="submit">
+              <Button type="submit" className="cursor-pointer">
                 {isEditing ? "Update" : "Create"} Category
               </Button>
             </div>

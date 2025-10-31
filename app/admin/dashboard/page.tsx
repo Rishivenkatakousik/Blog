@@ -1,6 +1,17 @@
+"use client";
+
+import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useCategoriesStore } from "@/store/categories/CategoriesStore";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function DashboardPage() {
+  const { count, fetchCategoriesCount, loading } = useCategoriesStore();
+
+  useEffect(() => {
+    fetchCategoriesCount();
+  }, [fetchCategoriesCount]);
+
   return (
     <div className="space-y-6">
       <div>
@@ -24,7 +35,13 @@ export default function DashboardPage() {
             <CardTitle className="text-sm font-medium">Categories</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">8</div>
+            <div className="text-2xl font-bold">
+              {loading ? (
+                <Spinner size={20} aria-label="Loading categories count" />
+              ) : (
+                count
+              )}
+            </div>
             <p className="text-xs text-muted-foreground">Active categories</p>
           </CardContent>
         </Card>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -11,58 +11,53 @@ import {
 import { Button } from "@/components/ui/button";
 import { CategoryForm } from "../components/CategoryForm";
 import { Trash2, Edit2 } from "lucide-react";
-
-interface Category {
-  id: string;
-  name: string;
-  description: string;
-}
+import { useCategoriesStore } from "@/store/categories/CategoriesStore";
+import type { Category } from "@/store/categories/types";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function CategoryPage() {
-  const [categories, setCategories] = useState<Category[]>([
-    {
-      id: "1",
-      name: "Technology",
-      description: "Latest tech trends and innovations",
-    },
-    {
-      id: "2",
-      name: "Design",
-      description: "UI/UX design principles and inspiration",
-    },
-    {
-      id: "3",
-      name: "Business",
-      description: "Business strategies and insights",
-    },
-  ]);
+  const {
+    categories,
+    loading,
+    error,
+    fetchCategories,
+    createCategory,
+    updateCategory,
+    deleteCategory,
+  } = useCategoriesStore();
   const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
 
-  const handleAddCategory = (data: { name: string; description: string }) => {
-    const newCategory: Category = {
-      id: Date.now().toString(),
-      ...data,
-    };
-    setCategories([...categories, newCategory]);
-    console.log("Category added successfully:", newCategory);
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
+
+  const handleAddCategory = async (data: {
+    name: string;
+    description: string;
+  }) => {
+    await createCategory({
+      name: data.name,
+      description: data.description,
+    });
+    setShowForm(false);
   };
 
-  const handleEditCategory = (data: { name: string; description: string }) => {
-    if (editingId) {
-      const updatedCategories = categories.map((cat) =>
-        cat.id === editingId ? { ...cat, ...data } : cat
-      );
-      setCategories(updatedCategories);
-      console.log("Category updated successfully:", { id: editingId, ...data });
-      setEditingId(null);
-    }
+  const handleEditCategory = async (data: {
+    name: string;
+    description: string;
+  }) => {
+    if (editingId == null) return;
+    await updateCategory(editingId, {
+      name: data.name,
+      description: data.description,
+    });
+    setEditingId(null);
+    setShowForm(false);
   };
 
-  const handleDeleteCategory = (id: string) => {
-    const deletedCategory = categories.find((cat) => cat.id === id);
-    setCategories(categories.filter((cat) => cat.id !== id));
-    console.log("Category deleted:", deletedCategory);
+  const handleDeleteCategory = async (id: number) => {
+    await deleteCategory(id);
   };
 
   const handleOpenEditForm = (category: Category) => {
@@ -86,7 +81,9 @@ export default function CategoryPage() {
           <h1 className="text-3xl font-bold tracking-tight">Categories</h1>
           <p className="text-muted-foreground">Manage your post categories</p>
         </div>
-        <Button onClick={() => setShowForm(true)}>Add Category</Button>
+        <Button onClick={() => setShowForm(true)} className="cursor-pointer">
+          Add Category
+        </Button>
       </div>
 
       <Card>
@@ -98,6 +95,13 @@ export default function CategoryPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
+          {loading && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Spinner size={16} aria-label="Loading categories" />
+              Loading categories
+            </div>
+          )}
           {categories.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-muted-foreground">
@@ -114,7 +118,7 @@ export default function CategoryPage() {
                   <div className="flex-1">
                     <p className="font-medium">{category.name}</p>
                     <p className="text-sm text-muted-foreground">
-                      {category.description}
+                      {category.description ?? ""}
                     </p>
                   </div>
                   <div className="flex gap-2">
@@ -122,6 +126,8 @@ export default function CategoryPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => handleOpenEditForm(category)}
+                      disabled={loading}
+                      className="cursor-pointer"
                     >
                       <Edit2 className="w-4 h-4 mr-1" />
                       Edit
@@ -130,6 +136,8 @@ export default function CategoryPage() {
                       variant="destructive"
                       size="sm"
                       onClick={() => handleDeleteCategory(category.id)}
+                      disabled={loading}
+                      className="cursor-pointer"
                     >
                       <Trash2 className="w-4 h-4 mr-1" />
                       Delete
@@ -150,7 +158,7 @@ export default function CategoryPage() {
             editingCategory
               ? {
                   name: editingCategory.name,
-                  description: editingCategory.description,
+                  description: editingCategory.description ?? "",
                 }
               : undefined
           }

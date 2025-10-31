@@ -1,7 +1,6 @@
 "use client";
 
 import type React from "react";
-
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -17,20 +16,19 @@ import { Textarea } from "@/components/ui/textarea";
 import ReactMarkdown from "react-markdown";
 import { X } from "lucide-react";
 import Image from "next/image";
-
-// Mock categories data - replace with actual API call
-const MOCK_CATEGORIES = [
-  { id: 1, name: "Technology" },
-  { id: 2, name: "Business" },
-  { id: 3, name: "Design" },
-  { id: 4, name: "Marketing" },
-  { id: 5, name: "Development" },
-  { id: 6, name: "Lifestyle" },
-];
+import { useCategoriesStore } from "@/store/categories/CategoriesStore";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function PostForm() {
   const router = useRouter();
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const {
+    categories,
+    loading: catsLoading,
+    error: catsError,
+    fetchCategories,
+  } = useCategoriesStore();
+
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -41,6 +39,13 @@ export default function PostForm() {
   const [preview, setPreview] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+
+  // Fetch categories on mount if not loaded
+  useEffect(() => {
+    if (!categories.length) {
+      fetchCategories();
+    }
+  }, [fetchCategories, categories.length]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -137,7 +142,7 @@ export default function PostForm() {
     router.push("/admin/posts");
   };
 
-  const selectedCategories = MOCK_CATEGORIES.filter((cat) =>
+  const selectedCategories = categories.filter((cat) =>
     formData.categoryIds.includes(cat.id)
   );
 
@@ -253,17 +258,24 @@ export default function PostForm() {
                       onClick={() =>
                         setShowCategoryDropdown(!showCategoryDropdown)
                       }
-                      className="w-full px-3 py-2 border border-input rounded-md bg-background text-sm text-left hover:bg-accent transition-colors"
+                      disabled={catsLoading}
+                      className="w-full px-3 py-2 border border-input rounded-md bg-background text-sm text-left hover:bg-accent transition-colors cursor-pointer disabled:opacity-60"
                     >
-                      {formData.categoryIds.length === 0
-                        ? "Select categories..."
-                        : `${formData.categoryIds.length} selected`}
+                      {catsLoading ? (
+                        <span className="inline-flex items-center gap-2">
+                          <Spinner size={16} aria-label="Loading categories" />
+                          Loading categories…
+                        </span>
+                      ) : formData.categoryIds.length === 0 ? (
+                        "Select categories..."
+                      ) : (
+                        `${formData.categoryIds.length} selected`
+                      )}
                     </button>
-
-                    {showCategoryDropdown && (
+                    {showCategoryDropdown && !catsLoading && (
                       <div className="absolute top-full left-0 right-0 mt-1 border border-input rounded-md bg-background shadow-lg z-10">
                         <div className="max-h-48 overflow-y-auto">
-                          {MOCK_CATEGORIES.map((category) => (
+                          {categories.map((category) => (
                             <label
                               key={category.id}
                               className="flex items-center gap-2 px-3 py-2 hover:bg-accent cursor-pointer border-b last:border-b-0"
@@ -285,6 +297,11 @@ export default function PostForm() {
                               <span className="text-sm">{category.name}</span>
                             </label>
                           ))}
+                          {categories.length === 0 && !catsLoading && (
+                            <div className="px-3 py-2 text-sm text-muted-foreground">
+                              No categories found
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}
@@ -302,7 +319,7 @@ export default function PostForm() {
                           <button
                             type="button"
                             onClick={() => handleCategoryToggle(category.id)}
-                            className="hover:opacity-70"
+                            className="hover:opacity-70 cursor-pointer"
                           >
                             <X size={14} />
                           </button>
@@ -314,11 +331,14 @@ export default function PostForm() {
 
                 {/* Form Actions */}
                 <div className="flex gap-3 pt-4">
-                  <Button type="submit">Publish Post</Button>
+                  <Button type="submit" className="cursor-pointer">
+                    Publish Post
+                  </Button>
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => router.push("/admin/posts")}
+                    className="cursor-pointer"
                   >
                     Cancel
                   </Button>

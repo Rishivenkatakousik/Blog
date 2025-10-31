@@ -5,18 +5,27 @@ import type { Category } from "./types";
 
 interface CategoriesState {
   categories: Category[];
+  count: number;
   loading: boolean;
   error: string | null;
 
   fetchCategories: () => Promise<void>;
-  createCategory: (data: Omit<Category, "id" | "slug">) => Promise<void>;
-  updateCategory: (id: number, data: Partial<Category>) => Promise<void>;
+  fetchCategoriesCount: () => Promise<void>;
+  createCategory: (data: {
+    name: string;
+    description?: string | null;
+  }) => Promise<void>;
+  updateCategory: (
+    id: number,
+    data: { name: string; description?: string | null }
+  ) => Promise<void>;
   deleteCategory: (id: number) => Promise<void>;
 }
 
 export const useCategoriesStore = create<CategoriesState>()(
   devtools((set, get) => ({
     categories: [],
+    count: 0,
     loading: false,
     error: null,
 
@@ -33,15 +42,26 @@ export const useCategoriesStore = create<CategoriesState>()(
       }
     },
 
+    fetchCategoriesCount: async () => {
+      try {
+        // lightweight count fetch
+        const trpc = getTrpcProxy();
+        const total = await trpc.categories.count.query();
+        set({ count: total });
+      } catch (err: any) {
+        set({ error: err.message });
+      }
+    },
+
     createCategory: async (data) => {
       try {
         set({ loading: true, error: null });
         const trpc = getTrpcProxy();
         await trpc.categories.create.mutate({
           name: data.name,
-          description: data.description || "",
+          description: data.description ?? undefined,
         });
-        await get().fetchCategories();
+        await Promise.all([get().fetchCategories(), get().fetchCategoriesCount()]);
       } catch (err: any) {
         set({ error: err.message });
       } finally {
@@ -55,8 +75,8 @@ export const useCategoriesStore = create<CategoriesState>()(
         const trpc = getTrpcProxy();
         await trpc.categories.update.mutate({
           id,
-          name: data.name ?? "",
-          description: data.description ?? "",
+          name: data.name,
+          description: data.description ?? undefined,
         });
         await get().fetchCategories();
       } catch (err: any) {
@@ -71,7 +91,7 @@ export const useCategoriesStore = create<CategoriesState>()(
         set({ loading: true, error: null });
         const trpc = getTrpcProxy();
         await trpc.categories.delete.mutate({ id });
-        await get().fetchCategories();
+        await Promise.all([get().fetchCategories(), get().fetchCategoriesCount()]);
       } catch (err: any) {
         set({ error: err.message });
       } finally {
