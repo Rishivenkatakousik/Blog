@@ -215,7 +215,7 @@ export default function PostForm() {
                   )}
                   {formData.image && (
                     <div className="mt-2 rounded-lg overflow-hidden border">
-                      <Image
+                      <img
                         src={formData.image || "/placeholder.svg"}
                         alt="Preview"
                         className="w-full h-48 object-cover"
