@@ -8,7 +8,7 @@ import {
   integer,
   primaryKey,
 } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { desc, relations } from "drizzle-orm";
 
 // 🏷️ Categories table
 export const categories = pgTable("categories", {
@@ -25,13 +25,12 @@ export const posts = pgTable("posts", {
   id: serial("id").primaryKey(),
   title: varchar("title", { length: 200 }).notNull(),
   content: text("content").notNull(),
+  description: text("description").notNull(),
   slug: varchar("slug", { length: 200 }).notNull().unique(),
-  image: varchar("image", { length: 500 }), // ✅ single image URL
+  image: varchar("image", { length: 500 }),
   published: boolean("published").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-
-  // optional relation to user
 });
 
 // 🔗 Post–Category many-to-many relationship

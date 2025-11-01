@@ -4,6 +4,7 @@ import { db } from "../../db/client";
 import { posts, postCategories } from "../../db/schema";
 import { postSchema } from "../validators";
 import { eq } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { slugify } from "../../utils/slugify";
 import { formatError } from "../../utils/formatError";
 
@@ -16,6 +17,7 @@ export const postsRouter = router({
         .values({
           title: input.title,
           content: input.content,
+          description: input.description,
           image: input.image,
           published: input.published,
           slug,
@@ -95,9 +97,11 @@ export const postsRouter = router({
           .set({
             title: input.title,
             content: input.content,
+            description: input.description,
             image: input.image,
             published: input.published,
             slug,
+            updatedAt: sql`now()`,
           })
           .where(eq(posts.id, input.id))
           .returning();
@@ -129,4 +133,16 @@ export const postsRouter = router({
         throw new Error(formatError(error));
       }
     }),
+
+  // posts count
+  count: publicProcedure.query(async () => {
+    try {
+      const [{ count }] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(posts);
+      return Number(count);
+    } catch (error) {
+      throw new Error(formatError(error));
+    }
+  }),
 });

@@ -1,7 +1,6 @@
 "use client";
 
-import type React from "react";
-import { useState, useRef, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,23 +12,30 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import ReactMarkdown from "react-markdown";
 import { X } from "lucide-react";
-// import Image from "next/image"; // not used
 import { useCategoriesStore } from "@/store/categories/CategoriesStore";
 import { Spinner } from "@/components/ui/spinner";
 import { usePostsStore } from "@/store/posts/PostsStore";
+import type { ApiPost } from "@/store/posts/types";
+import PostPreview from "./PostPreview";
 
-export default function PostForm() {
+interface PostFormProps {
+  initialData?: ApiPost;
+  isEditing?: boolean;
+}
+
+export default function PostForm({
+  initialData,
+  isEditing = false,
+}: PostFormProps) {
   const router = useRouter();
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
   const {
     categories,
     loading: catsLoading,
-    error: catsError,
     fetchCategories,
   } = useCategoriesStore();
-  const { createPost } = usePostsStore();
+  const { createPost, updatePost } = usePostsStore();
 
   const [formData, setFormData] = useState({
     title: "",
@@ -39,7 +45,6 @@ export default function PostForm() {
     categoryIds: [] as number[],
     published: false,
   });
-  const [preview, setPreview] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -51,6 +56,22 @@ export default function PostForm() {
     }
   }, [fetchCategories, categories.length]);
 
+  // populate when editing
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        title: initialData.title ?? "",
+        description: initialData.description ?? "",
+        image: initialData.image ?? "",
+        content: initialData.content ?? "",
+        categoryIds: (initialData.categories ?? []).map(
+          (c) => c.categoryId ?? c.category.id ?? 0
+        ),
+        published: Boolean(initialData.published),
+      });
+    }
+  }, [initialData]);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -60,12 +81,10 @@ export default function PostForm() {
         setShowCategoryDropdown(false);
       }
     };
-
     if (showCategoryDropdown) {
       document.addEventListener("mousedown", handleClickOutside);
-      return () => {
+      return () =>
         document.removeEventListener("mousedown", handleClickOutside);
-      };
     }
   }, [showCategoryDropdown]);
 
@@ -73,34 +92,20 @@ export default function PostForm() {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    // Clear error for this field when user starts typing
-    if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: "",
-      }));
-    }
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   const handleCategoryToggle = (categoryId: number) => {
     setFormData((prev) => {
       const isSelected = prev.categoryIds.includes(categoryId);
-      if (isSelected) {
+      if (isSelected)
         return {
           ...prev,
           categoryIds: prev.categoryIds.filter((id) => id !== categoryId),
         };
-      } else if (prev.categoryIds.length < 3) {
-        return {
-          ...prev,
-          categoryIds: [...prev.categoryIds, categoryId],
-        };
-      }
-      return prev;
+      if (prev.categoryIds.length >= 3) return prev;
+      return { ...prev, categoryIds: [...prev.categoryIds, categoryId] };
     });
     setShowCategoryDropdown(false);
   };
@@ -115,26 +120,37 @@ export default function PostForm() {
     return newErrors;
   };
 
-  // publish: true -> Publish; false -> Save as draft
   const handleSubmit = async (e: React.FormEvent | null, publish: boolean) => {
     if (e) e.preventDefault();
     const newErrors = validateForm();
-    if (Object.keys(newErrors).length > 0) {
+    if (Object.keys(newErrors).length) {
       setErrors(newErrors);
       return;
     }
     setSubmitting(true);
     try {
-      const payload = {
-        title: formData.title.trim(),
-        description: formData.description.trim(),
-        image: formData.image.trim(),
-        content: formData.content.trim(),
-        categoryIds: formData.categoryIds,
-        published: publish,
-      };
-      console.log(publish ? "Publishing post:" : "Saving draft:", payload);
-      // Reset form
+      if (isEditing && initialData) {
+        await updatePost({
+          id: initialData.id,
+          title: formData.title.trim(),
+          content: formData.content.trim(),
+          description: formData.description.trim(),
+          image: formData.image.trim() || undefined,
+          published: publish,
+          categoryIds: formData.categoryIds,
+        });
+      } else {
+        await createPost({
+          title: formData.title.trim(),
+          content: formData.content.trim(),
+          description: formData.description.trim(),
+          image: formData.image.trim() || undefined,
+          published: publish,
+          categoryIds: formData.categoryIds,
+        });
+      }
+
+      // Reset form after successful create
       setFormData({
         title: "",
         description: "",
@@ -143,9 +159,11 @@ export default function PostForm() {
         categoryIds: [],
         published: false,
       });
+
+      // navigate back to posts list
       router.push("/admin/posts");
     } catch (err) {
-      // surface a generic error
+      // In case createPost throws in future or network error
       setErrors((prev) => ({ ...prev, root: "Failed to save post" }));
     } finally {
       setSubmitting(false);
@@ -159,8 +177,10 @@ export default function PostForm() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Create Post</h1>
-        <p className="text-muted-foreground">Add a new blog post</p>
+        <h1 className="text-3xl font-bold tracking-tight">
+          {isEditing ? "Edit Post" : "Create Post"}
+        </h1>
+        <p className="text-muted-foreground">Add or update a blog post</p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -385,6 +405,10 @@ export default function PostForm() {
                     Cancel
                   </Button>
                 </div>
+
+                {errors.root && (
+                  <p className="text-sm text-red-600 mt-2">{errors.root}</p>
+                )}
               </form>
             </CardContent>
           </Card>
@@ -392,48 +416,13 @@ export default function PostForm() {
 
         {/* Preview Section */}
         <div className="lg:col-span-1">
-          <Card className="sticky top-6">
-            <CardHeader>
-              <CardTitle>Preview</CardTitle>
-              <CardDescription>How your post will look</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {formData.image && (
-                <div className="rounded-lg overflow-hidden border">
-                  <img
-                    src={formData.image || "/placeholder.svg"}
-                    alt="Preview"
-                    className="w-full h-32 object-cover"
-                  />
-                </div>
-              )}
-              {formData.title && (
-                <h2 className="text-lg font-bold">{formData.title}</h2>
-              )}
-              {formData.description && (
-                <p className="text-sm text-muted-foreground">
-                  {formData.description}
-                </p>
-              )}
-              {selectedCategories.length > 0 && (
-                <div className="flex flex-wrap gap-1">
-                  {selectedCategories.map((cat) => (
-                    <span
-                      key={cat.id}
-                      className="text-xs bg-muted px-2 py-1 rounded"
-                    >
-                      {cat.name}
-                    </span>
-                  ))}
-                </div>
-              )}
-              {formData.content && (
-                <div className="prose prose-sm max-w-none dark:prose-invert">
-                  <ReactMarkdown>{formData.content}</ReactMarkdown>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <PostPreview
+            image={formData.image}
+            title={formData.title}
+            description={formData.description}
+            categories={selectedCategories}
+            content={formData.content}
+          />
         </div>
       </div>
     </div>

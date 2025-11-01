@@ -8,6 +8,7 @@ export const categorySchema = z.object({
 export const postSchema = z.object({
   title: z.string().min(3, "Title is required"),
   content: z.string().min(10, "Content too short"),
+  description: z.string().min(10, "Description too short"),
   image: z.string().url("Invalid image URL").optional(),
   published: z.boolean().default(false),
   categoryIds: z.array(z.number()).optional(),

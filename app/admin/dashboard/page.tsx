@@ -1,16 +1,33 @@
 "use client";
 
 import { useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { useCategoriesStore } from "@/store/categories/CategoriesStore";
+import { usePostsStore } from "@/store/posts/PostsStore";
 import { Spinner } from "@/components/ui/spinner";
 
 export default function DashboardPage() {
-  const { count, fetchCategoriesCount, loading } = useCategoriesStore();
+  const {
+    count: catCount,
+    fetchCategoriesCount,
+    loading: catsLoading,
+  } = useCategoriesStore();
+  const {
+    count: postsCount,
+    fetchPostsCount,
+    loading: postsLoading,
+  } = usePostsStore();
 
   useEffect(() => {
     fetchCategoriesCount();
-  }, [fetchCategoriesCount]);
+    fetchPostsCount();
+  }, [fetchCategoriesCount, fetchPostsCount]);
 
   return (
     <div className="space-y-6">
@@ -25,8 +42,14 @@ export default function DashboardPage() {
             <CardTitle className="text-sm font-medium">Total Posts</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">24</div>
-            <p className="text-xs text-muted-foreground">+2 from last week</p>
+            <div className="text-2xl font-bold">
+              {postsLoading || catsLoading ? (
+                <Spinner size={20} aria-label="Loading posts count" />
+              ) : (
+                postsCount
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">All posts</p>
           </CardContent>
         </Card>
 
@@ -36,17 +59,17 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {loading ? (
+              {catsLoading ? (
                 <Spinner size={20} aria-label="Loading categories count" />
               ) : (
-                count
+                catCount
               )}
             </div>
             <p className="text-xs text-muted-foreground">Active categories</p>
           </CardContent>
         </Card>
 
-        <Card>
+        {/* <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Views</CardTitle>
           </CardHeader>
@@ -56,7 +79,7 @@ export default function DashboardPage() {
               +12% from last month
             </p>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
     </div>
   );

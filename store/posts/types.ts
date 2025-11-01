@@ -18,10 +18,12 @@ export type ApiPost = {
   title: string;
   slug: string;
   content: string;
+  // DB column is NOT NULL after migration / validator requires it
+  description: string;
   image: string | null;
   createdAt: string | null;
   updatedAt: string | null;
-  published: boolean | null;
+  published: boolean;
   categories: ApiPostCategoryLink[];
 };
 
@@ -48,7 +50,7 @@ export function mapApiPostToUi(p: ApiPost): UiPost {
     id: String(p.id),
     slug: p.slug,
     title: p.title,
-    description: p.content.slice(0, 140),
+    description: p.description,
     content: p.content,
     author: "Unknown",
     date: p.createdAt ?? "",
