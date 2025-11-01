@@ -22,8 +22,9 @@ export function BlogPostCard({
   if (horizontal) {
     return (
       <Link href={`/${post.slug}`} className="block hover:no-underline">
-        <div className="flex flex-row gap-4 h-48 overflow-hidden transition-shadow group">
-          <div className="relative rounded-lg overflow-hidden bg-gray-200 w-72 h-48 shrink-0">
+        {/* stacked on mobile, row on md+ */}
+        <div className="flex flex-col md:flex-row gap-4 overflow-hidden transition-shadow group">
+          <div className="relative rounded-lg overflow-hidden bg-gray-200 w-full md:w-72 h-48 md:h-48 shrink-0">
             <Image
               src={imageSrc}
               alt={post.title}
@@ -37,10 +38,10 @@ export function BlogPostCard({
                 <span className="font-medium text-gray-700">Author</span> •{" "}
                 {date}
               </p>
-              <h3 className="text-base font-semibold text-gray-900">
+              <h3 className="text-base font-semibold text-gray-900 mb-2">
                 <span className="inline">{post.title}</span>
                 <span className="inline-block ml-2 align-middle">
-                  <ArrowUpRight className="h-4 w-4 inline-block transition mb-1" />
+                  <ArrowUpRight className="h-4 w-4 inline-block transition" />
                 </span>
               </h3>
               <p className="text-sm text-gray-600 mb-3 line-clamp-2">

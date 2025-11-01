@@ -58,11 +58,11 @@ export default function PostsPage() {
               {posts.map((post) => (
                 <div
                   key={post.id}
-                  className="flex items-center justify-between border-b pb-4 last:border-0"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-4 last:border-0 gap-3"
                 >
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3">
-                      <p className="font-medium">{post.title}</p>
+                      <p className="font-medium truncate">{post.title}</p>
                       <Badge variant={post.published ? "default" : "secondary"}>
                         {post.published ? "Published" : "Draft"}
                       </Badge>
@@ -74,10 +74,12 @@ export default function PostsPage() {
                         : "—"}
                     </p>
                   </div>
-                  <div className="flex gap-2">
+
+                  <div className="flex w-full sm:w-auto flex-col sm:flex-row gap-2">
                     <Button
                       variant="outline"
                       size="sm"
+                      className="w-full sm:w-auto"
                       onClick={() =>
                         router.push(`/admin/posts/${post.id}/edit`)
                       }
@@ -87,8 +89,8 @@ export default function PostsPage() {
                     <Button
                       variant="destructive"
                       size="sm"
+                      className="w-full sm:w-auto"
                       onClick={async () => {
-                        // await deletion to ensure store refresh runs before UI updates
                         await deletePost(post.id);
                       }}
                     >

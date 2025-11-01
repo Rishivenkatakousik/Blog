@@ -2,9 +2,17 @@
 
 import { BlogPostCard } from "./BlogPostCard";
 import { BlogPagination } from "./Pagination";
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import type { ApiPost } from "@/store/posts/types";
 import { CTA } from "./cta";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useCategoriesStore } from "@/store/categories/CategoriesStore";
 
 export function BlogGrid({
   recentPosts,
@@ -14,25 +22,78 @@ export function BlogGrid({
   allPosts: ApiPost[];
 }) {
   const [currentPage, setCurrentPage] = useState(1);
-  const postsPerPage = 6;
-  const totalPages = Math.max(1, Math.ceil(allPosts.length / postsPerPage));
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-  const paginatedPosts = allPosts.slice(
-    (currentPage - 1) * postsPerPage,
-    currentPage * postsPerPage
+  const {
+    categories,
+    fetchCategories,
+    loading: catsLoading,
+  } = useCategoriesStore();
+
+  const postsPerPage = 6;
+
+  // derive filtered posts based on search and selected category
+  const filteredPosts = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return allPosts.filter((post) => {
+      const title = (post.title ?? "").toString().toLowerCase();
+      const description = (post.description ?? "").toString().toLowerCase();
+      const content = (post.content ?? "").toString().toLowerCase();
+
+      const matchesSearch =
+        q === "" ||
+        title.includes(q) ||
+        description.includes(q) ||
+        content.includes(q);
+
+      const matchesCategory =
+        !selectedCategory ||
+        (post.categories ?? []).some(
+          (cat) =>
+            (cat?.category?.name ?? (cat as any).name) === selectedCategory
+        );
+
+      return matchesCategory && matchesSearch;
+    });
+  }, [allPosts, searchQuery, selectedCategory]);
+
+  // reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedCategory]);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredPosts.length / postsPerPage)
   );
 
-  // If there are no posts at all, show a friendly message
-  if (!allPosts || allPosts.length === 0) {
-    return (
-      <div className="py-12 text-center">
-        <p className="text-lg font-medium">No posts found.</p>
-        <p className="text-sm text-muted-foreground">
-          Check back later for new content.
-        </p>
-      </div>
-    );
-  }
+  const paginatedPosts = useMemo(() => {
+    const start = (currentPage - 1) * postsPerPage;
+    return filteredPosts.slice(start, start + postsPerPage);
+  }, [filteredPosts, currentPage, postsPerPage]);
+
+  useEffect(() => {
+    if (!categories || categories.length === 0) {
+      fetchCategories().catch((e) =>
+        console.error("fetchCategories error:", e)
+      );
+    }
+  }, [categories, fetchCategories]);
+
+  const allCategories = (categories ?? []).map((c) => c.name).sort();
+
+  // // If there are no posts at all, show a friendly message
+  // if (!allPosts || allPosts.length === 0) {
+  //   return (
+  //     <div className="py-12 text-center">
+  //       <p className="text-lg font-medium">No posts found.</p>
+  //       <p className="text-sm text-muted-foreground">
+  //         Check back later for new content.
+  //       </p>
+  //     </div>
+  //   );
+  // }
 
   return (
     <>
@@ -65,6 +126,44 @@ export function BlogGrid({
         <h2 className="text-2xl font-bold text-gray-900 mb-8">
           All blog posts
         </h2>
+        <div className="flex flex-col sm:flex-row gap-4 mb-8">
+          <input
+            type="text"
+            placeholder="Search by title, or content..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+          />
+
+          <Select
+            value={selectedCategory || "all"}
+            onValueChange={(value) =>
+              setSelectedCategory(value === "all" ? null : value)
+            }
+          >
+            <SelectTrigger className="w-full sm:w-48 bg-white border-gray-300 text-gray-900">
+              <SelectValue placeholder="Filter by category" />
+            </SelectTrigger>
+            <SelectContent className="bg-white">
+              <SelectItem value="all" className="cursor-pointer">
+                All Categories
+              </SelectItem>
+              {catsLoading ? (
+                <SelectItem value="loading">Loading…</SelectItem>
+              ) : (
+                allCategories.map((category) => (
+                  <SelectItem
+                    key={category}
+                    value={category}
+                    className="cursor-pointer"
+                  >
+                    {category}
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
+        </div>
         {paginatedPosts.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             No posts on this page.
