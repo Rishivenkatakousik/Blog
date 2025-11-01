@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { TagBadge } from "../components/TagBadge";
+import { TagBadge } from "../(landing)/components/TagBadge";
 import { Spinner } from "@/components/ui/spinner";
 import { usePostsStore } from "@/store/posts/PostsStore";
 import type { ApiPost } from "@/store/posts/types";
@@ -89,11 +89,7 @@ export default function BlogPostPageClient() {
             <p className="text-lg text-gray-600 mb-6">{post.description}</p>
             <div className="flex flex-wrap gap-2 mb-8">
               {tags.map((tag) => (
-                <TagBadge
-                  key={tag.label}
-                  label={tag.label}
-                  color={tag.color as any}
-                />
+                <TagBadge key={tag.label} label={tag.label} />
               ))}
             </div>
           </div>

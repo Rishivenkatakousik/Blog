@@ -37,9 +37,11 @@ export function BlogPostCard({
                 <span className="font-medium text-gray-700">Author</span> •{" "}
                 {date}
               </p>
-              <h3 className="text-base font-semibold text-gray-900 mb-2 flex items-center gap-1">
-                {post.title}
-                <ArrowUpRight className="h-4 w-4 transition" />
+              <h3 className="text-base font-semibold text-gray-900">
+                <span className="inline">{post.title}</span>
+                <span className="inline-block ml-2 align-middle">
+                  <ArrowUpRight className="h-4 w-4 inline-block transition mb-1" />
+                </span>
               </h3>
               <p className="text-sm text-gray-600 mb-3 line-clamp-2">
                 {post.description}
@@ -47,7 +49,7 @@ export function BlogPostCard({
             </div>
             <div className="flex flex-wrap gap-2">
               {tags.map((label) => (
-                <TagBadge key={label} label={label} color="purple" />
+                <TagBadge key={label} label={label} />
               ))}
             </div>
           </div>
@@ -76,15 +78,17 @@ export function BlogPostCard({
             <p className="text-sm text-gray-500 mb-2">
               <span className="font-medium text-gray-700">Author</span> • {date}
             </p>
-            <h3 className="text-lg text-gray-900 font-semibold mb-2 flex items-center gap-1">
-              {post.title}
-              <ArrowUpRight className="h-4 w-4 transition" />
+            <h3 className="text-lg text-gray-900 font-semibold mb-2">
+              <span className="inline">{post.title}</span>
+              <span className="inline-block ml-2 align-middle">
+                <ArrowUpRight className="h-4 w-4 inline-block transition" />
+              </span>
             </h3>
             <p className="text-sm text-gray-600 mb-4">{post.description}</p>
           </div>
           <div className="flex flex-wrap gap-2">
             {tags.map((label) => (
-              <TagBadge key={label} label={label} color="purple" />
+              <TagBadge key={label} label={label} />
             ))}
           </div>
         </div>

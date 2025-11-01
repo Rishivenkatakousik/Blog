@@ -4,6 +4,7 @@ import { BlogPostCard } from "./BlogPostCard";
 import { BlogPagination } from "./Pagination";
 import { useState } from "react";
 import type { ApiPost } from "@/store/posts/types";
+import { CTA } from "./cta";
 
 export function BlogGrid({
   recentPosts,
@@ -56,6 +57,8 @@ export function BlogGrid({
           </div>
         </section>
       )}
+
+      <CTA />
 
       {/* All Posts */}
       <section>

@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { usePostsStore } from "@/store/posts/PostsStore";
 import { Spinner } from "@/components/ui/spinner";
+import { Badge } from "@/components/ui/badge";
 
 export default function PostsPage() {
   const router = useRouter();
@@ -59,13 +60,18 @@ export default function PostsPage() {
                   key={post.id}
                   className="flex items-center justify-between border-b pb-4 last:border-0"
                 >
-                  <div>
-                    <p className="font-medium">{post.title}</p>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3">
+                      <p className="font-medium">{post.title}</p>
+                      <Badge variant={post.published ? "default" : "secondary"}>
+                        {post.published ? "Published" : "Draft"}
+                      </Badge>
+                    </div>
                     <p className="text-sm text-muted-foreground">
-                      {post.published ? "Published" : "Draft"} ·{" "}
+                      Published on{" "}
                       {post.createdAt
                         ? new Date(post.createdAt).toLocaleString()
-                        : ""}
+                        : "—"}
                     </p>
                   </div>
                   <div className="flex gap-2">
@@ -81,7 +87,10 @@ export default function PostsPage() {
                     <Button
                       variant="destructive"
                       size="sm"
-                      onClick={() => deletePost(post.id)}
+                      onClick={async () => {
+                        // await deletion to ensure store refresh runs before UI updates
+                        await deletePost(post.id);
+                      }}
                     >
                       Delete
                     </Button>

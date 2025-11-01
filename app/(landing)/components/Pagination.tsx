@@ -26,7 +26,8 @@ export function BlogPagination({
             <PaginationPrevious
               onClick={() => currentPage > 1 && onPageChange(currentPage - 1)}
               className={
-                currentPage === 1 ? "pointer-events-none opacity-50" : ""
+                (currentPage === 1 ? "pointer-events-none opacity-50 " : "") +
+                "cursor-pointer"
               }
             />
           </PaginationItem>
@@ -36,6 +37,7 @@ export function BlogPagination({
               <PaginationLink
                 onClick={() => onPageChange(i + 1)}
                 isActive={currentPage === i + 1}
+                className="cursor-pointer"
               >
                 {i + 1}
               </PaginationLink>
@@ -48,9 +50,9 @@ export function BlogPagination({
                 currentPage < totalPages && onPageChange(currentPage + 1)
               }
               className={
-                currentPage === totalPages
-                  ? "pointer-events-none opacity-50"
-                  : ""
+                (currentPage === totalPages
+                  ? "pointer-events-none opacity-50 "
+                  : "") + "cursor-pointer"
               }
             />
           </PaginationItem>
