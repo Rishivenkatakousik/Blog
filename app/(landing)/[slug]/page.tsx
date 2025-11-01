@@ -1,43 +1,75 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import { getBlogPostBySlug } from "@/lib/data";
-import { Badge } from "@/components/ui/badge";
-import { notFound } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import { TagBadge } from "../components/TagBadge";
+import { Spinner } from "@/components/ui/spinner";
+import { usePostsStore } from "@/store/posts/PostsStore";
+import type { ApiPost } from "@/store/posts/types";
 
-function TagBadge({ label, color }: { label: string; color: string }) {
-  const colorClasses = {
-    purple: "bg-purple-100 text-purple-700 hover:bg-purple-100",
-    pink: "bg-pink-100 text-pink-700 hover:bg-pink-100",
-    orange: "bg-orange-100 text-orange-700 hover:bg-orange-100",
-    green: "bg-green-100 text-green-700 hover:bg-green-100",
-  };
+export default function BlogPostPageClient() {
+  const params = useParams();
+  const slug = params?.slug as string | undefined;
+  const { getBySlug, loading, fetchPosts } = usePostsStore();
 
-  return (
-    <Badge
-      className={colorClasses[color as keyof typeof colorClasses]}
-      variant="outline"
-    >
-      {label}
-    </Badge>
-  );
-}
+  const [post, setPost] = useState<ApiPost | null | undefined>(undefined);
 
-export default async function BlogPostPage({
-  params,
-}: {
-  params: { slug: string };
-}) {
-  const { slug } = await params;
-  const post = getBlogPostBySlug(slug);
+  useEffect(() => {
+    if (!slug) {
+      setPost(null);
+      return;
+    }
+
+    (async () => {
+      try {
+        // try to fetch from API by slug
+        const p = await getBySlug(slug);
+        setPost(p);
+      } catch (e) {
+        console.error("getBySlug error:", e);
+        setPost(null);
+      }
+    })();
+  }, [slug, getBySlug]);
+
+  if (loading && post === undefined) {
+    return (
+      <div className="py-12 flex items-center justify-center">
+        <Spinner />
+      </div>
+    );
+  }
 
   if (!post) {
-    notFound();
+    return (
+      <main className="min-h-screen bg-white">
+        <div className="max-w-3xl mx-auto px-6 py-12 text-center">
+          <p className="text-lg font-medium">Post not found.</p>
+          <p className="text-sm text-muted-foreground">
+            It may have been removed or is still loading.
+          </p>
+          <div className="mt-6">
+            <Link href="/" className="text-blue-600 hover:text-blue-700">
+              ← Back to all posts
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
   }
+
+  const date = post.createdAt ? new Date(post.createdAt).toLocaleString() : "";
+  const imageSrc = post.image ?? "/placeholder.svg";
+  const tags = (post.categories ?? []).map((c) => ({
+    label: c.category.name,
+    color: "purple",
+  }));
 
   return (
     <main className="min-h-screen bg-white">
       <div className="max-w-3xl mx-auto px-6 py-12">
-        {/* Back Link */}
         <Link
           href="/"
           className="text-blue-600 hover:text-blue-700 mb-8 inline-block"
@@ -45,35 +77,36 @@ export default async function BlogPostPage({
           ← Back to all posts
         </Link>
 
-        {/* Post Header */}
         <article>
           <div className="mb-8">
             <p className="text-sm text-gray-500 mb-4">
-              <span className="font-medium text-gray-700">{post.author}</span> •{" "}
-              {post.date}
+              <span className="font-medium text-gray-700">Unknown</span> •{" "}
+              {date}
             </p>
             <h1 className="text-4xl font-bold text-gray-900 mb-4">
               {post.title}
             </h1>
             <p className="text-lg text-gray-600 mb-6">{post.description}</p>
             <div className="flex flex-wrap gap-2 mb-8">
-              {post.tags.map((tag) => (
-                <TagBadge key={tag.label} label={tag.label} color={tag.color} />
+              {tags.map((tag) => (
+                <TagBadge
+                  key={tag.label}
+                  label={tag.label}
+                  color={tag.color as any}
+                />
               ))}
             </div>
           </div>
 
-          {/* Featured Image */}
           <div className="relative w-full h-96 rounded-lg overflow-hidden mb-8 bg-gray-200">
             <Image
-              src={post.image || "/placeholder.svg"}
+              src={imageSrc}
               alt={post.title}
               fill
               className="object-cover"
             />
           </div>
 
-          {/* Post Content */}
           <div className="prose prose-lg max-w-none text-gray-700">
             {post.content.split("\n\n").map((paragraph, index) => {
               if (paragraph.startsWith("##")) {

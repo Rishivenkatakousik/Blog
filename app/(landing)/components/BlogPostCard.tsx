@@ -4,29 +4,20 @@ import { Card } from "@/components/ui/card";
 import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { TagBadge } from "./TagBadge";
-
-export interface BlogPost {
-  id: string;
-  slug: string;
-  title: string;
-  description: string;
-  content: string;
-  author: string;
-  date: string;
-  image: string;
-  tags: { label: string; color: "purple" | "pink" | "orange" | "green" }[];
-}
+import type { ApiPost } from "@/store/posts/types";
 
 export function BlogPostCard({
   post,
   featured = false,
   horizontal = false,
 }: {
-  post: BlogPost;
+  post: ApiPost;
   featured?: boolean;
   horizontal?: boolean;
 }) {
-  // const postLink = post.href || `/blog/${post.id}`;
+  const date = post.createdAt ? new Date(post.createdAt).toLocaleString() : "";
+  const imageSrc = post.image ?? "/placeholder.svg";
+  const tags = (post.categories ?? []).map((c) => c.category.name);
 
   if (horizontal) {
     return (
@@ -34,7 +25,7 @@ export function BlogPostCard({
         <div className="flex flex-row gap-4 h-48 overflow-hidden transition-shadow group">
           <div className="relative rounded-lg overflow-hidden bg-gray-200 w-72 h-48 shrink-0">
             <Image
-              src={post.image || "/placeholder.svg"}
+              src={imageSrc}
               alt={post.title}
               fill
               className="object-cover"
@@ -43,10 +34,8 @@ export function BlogPostCard({
           <div className="flex-1 flex flex-col justify-between p-4">
             <div>
               <p className="text-sm text-gray-500 mb-2">
-                <span className="font-medium text-gray-700">
-                  {post.author || "Author"}
-                </span>{" "}
-                • {post.date}
+                <span className="font-medium text-gray-700">Author</span> •{" "}
+                {date}
               </p>
               <h3 className="text-base font-semibold text-gray-900 mb-2 flex items-center gap-1">
                 {post.title}
@@ -57,8 +46,8 @@ export function BlogPostCard({
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              {post.tags.map((tag) => (
-                <TagBadge key={tag.label} label={tag.label} color={tag.color} />
+              {tags.map((label) => (
+                <TagBadge key={label} label={label} color="purple" />
               ))}
             </div>
           </div>
@@ -76,7 +65,7 @@ export function BlogPostCard({
           }`}
         >
           <Image
-            src={post.image || "/placeholder.svg"}
+            src={imageSrc}
             alt={post.title}
             fill
             className="object-cover"
@@ -85,20 +74,17 @@ export function BlogPostCard({
         <div className="flex-1 flex flex-col justify-between py-6">
           <div>
             <p className="text-sm text-gray-500 mb-2">
-              <span className="font-medium text-gray-700">
-                {post.author || "Author"}
-              </span>{" "}
-              • {post.date}
+              <span className="font-medium text-gray-700">Author</span> • {date}
             </p>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2 flex items-center gap-1">
+            <h3 className="text-lg text-gray-900 font-semibold mb-2 flex items-center gap-1">
               {post.title}
               <ArrowUpRight className="h-4 w-4 transition" />
             </h3>
             <p className="text-sm text-gray-600 mb-4">{post.description}</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            {post.tags.map((tag) => (
-              <TagBadge key={tag.label} label={tag.label} color={tag.color} />
+            {tags.map((label) => (
+              <TagBadge key={label} label={label} color="purple" />
             ))}
           </div>
         </div>
