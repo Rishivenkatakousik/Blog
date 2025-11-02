@@ -19,7 +19,7 @@ type UpdatePostInput = CreatePostInput & { id: number };
 interface PostsState {
   posts: ApiPost[];
   recentPosts: ApiPost[];
-  count: number;
+  count: number | null;
   loading: boolean;
   error: string | null;
 
@@ -38,17 +38,20 @@ export const usePostsStore = create<PostsState>()(
   devtools((set, get) => ({
     posts: [],
     recentPosts: [],
-    count: 0,
+    count: null,
     loading: false,
     error: null,
     // fetch lightweight count
     fetchPostsCount: async () => {
       try {
+        set({ loading: true, error: null });
         const trpc = getTrpcProxy();
         const total = await trpc.posts.count.query();
-        set({ count: total });
+        set({ count: total ?? 0 });
       } catch (err: any) {
         set({ error: err?.message ?? "Failed to fetch posts count" });
+      } finally {
+        set({ loading: false });
       }
     },
     fetchPosts: async () => {

@@ -29,6 +29,9 @@ export default function DashboardPage() {
     fetchPostsCount();
   }, [fetchCategoriesCount, fetchPostsCount]);
 
+  const countsLoading =
+    postsLoading || catsLoading || postsCount === null || catCount === null;
+
   return (
     <div className="space-y-6">
       <div>
@@ -43,7 +46,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {postsLoading || catsLoading ? (
+              {countsLoading ? (
                 <Spinner size={20} aria-label="Loading posts count" />
               ) : (
                 postsCount
@@ -59,7 +62,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {catsLoading ? (
+              {countsLoading ? (
                 <Spinner size={20} aria-label="Loading categories count" />
               ) : (
                 catCount

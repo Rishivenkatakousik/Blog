@@ -140,8 +140,12 @@ export function BlogGrid({
             onValueChange={(value) =>
               setSelectedCategory(value === "all" ? null : value)
             }
+            name="Select category"
           >
-            <SelectTrigger className="w-full sm:w-48 bg-white border-gray-300 text-gray-900">
+            <SelectTrigger
+              aria-label="Filter by category"
+              className="w-full sm:w-48 bg-white border-gray-300 text-gray-900"
+            >
               <SelectValue placeholder="Filter by category" />
             </SelectTrigger>
             <SelectContent className="bg-white">

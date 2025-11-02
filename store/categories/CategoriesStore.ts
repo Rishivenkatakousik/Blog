@@ -5,7 +5,7 @@ import type { Category } from "./types";
 
 interface CategoriesState {
   categories: Category[];
-  count: number;
+  count: number | null;
   loading: boolean;
   error: string | null;
 
@@ -25,7 +25,7 @@ interface CategoriesState {
 export const useCategoriesStore = create<CategoriesState>()(
   devtools((set, get) => ({
     categories: [],
-    count: 0,
+    count: null,
     loading: false,
     error: null,
 
@@ -44,12 +44,14 @@ export const useCategoriesStore = create<CategoriesState>()(
 
     fetchCategoriesCount: async () => {
       try {
-        // lightweight count fetch
+        set({ loading: true, error: null });
         const trpc = getTrpcProxy();
         const total = await trpc.categories.count.query();
-        set({ count: total });
+        set({ count: total ?? 0 });
       } catch (err: any) {
-        set({ error: err.message });
+        set({ error: err?.message ?? "Failed to fetch categories count" });
+      } finally {
+        set({ loading: false });
       }
     },
 
@@ -61,7 +63,10 @@ export const useCategoriesStore = create<CategoriesState>()(
           name: data.name,
           description: data.description ?? undefined,
         });
-        await Promise.all([get().fetchCategories(), get().fetchCategoriesCount()]);
+        await Promise.all([
+          get().fetchCategories(),
+          get().fetchCategoriesCount(),
+        ]);
       } catch (err: any) {
         set({ error: err.message });
       } finally {
@@ -91,7 +96,10 @@ export const useCategoriesStore = create<CategoriesState>()(
         set({ loading: true, error: null });
         const trpc = getTrpcProxy();
         await trpc.categories.delete.mutate({ id });
-        await Promise.all([get().fetchCategories(), get().fetchCategoriesCount()]);
+        await Promise.all([
+          get().fetchCategories(),
+          get().fetchCategoriesCount(),
+        ]);
       } catch (err: any) {
         set({ error: err.message });
       } finally {
