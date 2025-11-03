@@ -10,7 +10,6 @@ import {
 } from "drizzle-orm/pg-core";
 import { desc, relations } from "drizzle-orm";
 
-// 🏷️ Categories table
 export const categories = pgTable("categories", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 100 }).notNull(),
@@ -20,7 +19,6 @@ export const categories = pgTable("categories", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// ✍️ Posts table
 export const posts = pgTable("posts", {
   id: serial("id").primaryKey(),
   title: varchar("title", { length: 200 }).notNull(),
@@ -33,7 +31,6 @@ export const posts = pgTable("posts", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// 🔗 Post–Category many-to-many relationship
 export const postCategories = pgTable(
   "post_categories",
   {

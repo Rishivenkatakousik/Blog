@@ -9,7 +9,7 @@ type CreatePostInput = {
   title: string;
   content: string;
   description: string; // required by server validator
-  image?: string;
+  image: string;
   published: boolean;
   categoryIds?: number[];
 };
@@ -25,9 +25,7 @@ interface PostsState {
 
   fetchPosts: () => Promise<ApiPost[]>;
   fetchPostsCount: () => Promise<void>;
-  // fetch a single post by slug
   getBySlug: (slug: string) => Promise<ApiPost | null>;
-  // fetch posts for a specific category
   getByCategory: (categoryId: number) => Promise<ApiPost[]>;
   createPost: (data: CreatePostInput) => Promise<void>;
   updatePost: (data: UpdatePostInput) => Promise<void>;

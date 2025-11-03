@@ -18,6 +18,8 @@ import { Spinner } from "@/components/ui/spinner";
 import { usePostsStore } from "@/store/posts/PostsStore";
 import type { ApiPost } from "@/store/posts/types";
 import PostPreview from "./PostPreview";
+import { postSchema } from "@/server/tprc/validators";
+import { ZodError } from "zod";
 
 interface PostFormProps {
   initialData?: ApiPost;
@@ -111,13 +113,30 @@ export default function PostForm({
   };
 
   const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-    if (!formData.title.trim()) newErrors.title = "Title is required";
-    if (!formData.description.trim())
-      newErrors.description = "Description is required";
-    if (!formData.image.trim()) newErrors.image = "Image URL is required";
-    if (!formData.content.trim()) newErrors.content = "Content is required";
-    return newErrors;
+    try {
+      // validate with zod (will throw if invalid)
+      postSchema.parse({
+        title: formData.title,
+        content: formData.content,
+        description: formData.description,
+        image: formData.image || undefined,
+        published: formData.published,
+        categoryIds: formData.categoryIds,
+      });
+      return {};
+    } catch (err) {
+      const newErrors: Record<string, string> = {};
+      if (err instanceof ZodError) {
+        for (const issue of err.issues) {
+          const key = String(issue.path[0] ?? "root");
+          // prefer first error message per field
+          if (!newErrors[key]) newErrors[key] = issue.message;
+        }
+      } else {
+        newErrors.root = "Validation failed";
+      }
+      return newErrors;
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent | null, publish: boolean) => {
@@ -135,7 +154,7 @@ export default function PostForm({
           title: formData.title.trim(),
           content: formData.content.trim(),
           description: formData.description.trim(),
-          image: formData.image.trim() || undefined,
+          image: formData.image.trim(),
           published: publish,
           categoryIds: formData.categoryIds,
         });
@@ -144,7 +163,7 @@ export default function PostForm({
           title: formData.title.trim(),
           content: formData.content.trim(),
           description: formData.description.trim(),
-          image: formData.image.trim() || undefined,
+          image: formData.image.trim(),
           published: publish,
           categoryIds: formData.categoryIds,
         });

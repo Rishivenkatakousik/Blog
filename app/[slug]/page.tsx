@@ -24,7 +24,6 @@ export default function BlogPostPageClient() {
 
     (async () => {
       try {
-        // try to fetch from API by slug
         const p = await getBySlug(slug);
         setPost(p);
       } catch (e) {

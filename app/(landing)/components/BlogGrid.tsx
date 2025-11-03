@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCategoriesStore } from "@/store/categories/CategoriesStore";
+import { Input } from "@/components/ui/input";
 
 export function BlogGrid({
   recentPosts,
@@ -83,18 +84,6 @@ export function BlogGrid({
 
   const allCategories = (categories ?? []).map((c) => c.name).sort();
 
-  // // If there are no posts at all, show a friendly message
-  // if (!allPosts || allPosts.length === 0) {
-  //   return (
-  //     <div className="py-12 text-center">
-  //       <p className="text-lg font-medium">No posts found.</p>
-  //       <p className="text-sm text-muted-foreground">
-  //         Check back later for new content.
-  //       </p>
-  //     </div>
-  //   );
-  // }
-
   return (
     <>
       {/* Recent Posts */}
@@ -127,12 +116,12 @@ export function BlogGrid({
           All blog posts
         </h2>
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
-          <input
+          <Input
             type="text"
             placeholder="Search by title, or content..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 "
           />
 
           <Select

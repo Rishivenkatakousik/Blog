@@ -16,7 +16,6 @@ export const trpcClient = trpc.createClient({
   ],
 });
 
-// Replace the old exported instance with a lazy singleton getter
 let _proxy: TRPCClient<AppRouter> | null = null;
 
 export function getTrpcProxy() {

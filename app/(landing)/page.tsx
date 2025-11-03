@@ -20,7 +20,6 @@ export default function BlogPage() {
     })();
   }, [fetchPosts]);
 
-  // derive recent + all (exclude top 3) from fetchedPosts or fallback to store
   const uiRecent = fetchedPosts ? fetchedPosts.slice(0, 3) : recentPosts;
   const uiAll = fetchedPosts ? fetchedPosts.slice(3) : posts.slice(3);
 

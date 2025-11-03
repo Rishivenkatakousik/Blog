@@ -3,7 +3,7 @@ import { z } from "zod";
 import { db } from "../../db/client";
 import { categories } from "../../db/schema";
 import { categorySchema } from "../validators";
-import { eq, sql } from "drizzle-orm"; // <- added sql
+import { eq, sql } from "drizzle-orm";
 import { slugify } from "../../utils/slugify";
 import { formatError } from "../../utils/formatError";
 

@@ -17,9 +17,9 @@ export function CTA() {
           <input
             type="email"
             placeholder="Enter your email"
-            className="flex-1 px-6 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-colors"
+            className="flex-1 px-6 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-500"
           />
-          <Button className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-6">
+          <Button className="cursor-pointer text-white px-8 py-6">
             Subscribe
           </Button>
         </div>

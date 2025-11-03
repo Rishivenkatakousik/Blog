@@ -15,12 +15,12 @@ export function Hero() {
           content.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-6 text-base">
+          <Button className="text-white px-8 py-6 text-base cursor-pointer">
             Start Reading
           </Button>
           <Button
             variant="outline"
-            className="border-gray-300 text-gray-900 hover:bg-gray-100 px-8 py-6 text-base bg-transparent"
+            className="border-gray-300 text-gray-900 hover:bg-gray-100 cursor-pointer px-8 py-6 text-base bg-transparent"
           >
             Learn More
           </Button>

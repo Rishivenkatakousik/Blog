@@ -32,9 +32,7 @@ export function Header() {
             </Link>
           </nav>
         </div>
-        <Button className="bg-purple-600 hover:bg-purple-700 text-white">
-          Subscribe
-        </Button>
+        <Button className=" text-white cursor-pointer">Subscribe</Button>
       </div>
     </header>
   );

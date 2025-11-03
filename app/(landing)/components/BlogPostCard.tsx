@@ -22,7 +22,6 @@ export function BlogPostCard({
   if (horizontal) {
     return (
       <Link href={`/${post.slug}`} className="block hover:no-underline">
-        {/* stacked on mobile, row on md+ */}
         <div className="flex flex-col md:flex-row gap-4 overflow-hidden transition-shadow group">
           <div className="relative rounded-lg overflow-hidden bg-gray-200 w-full md:w-72 h-48 md:h-48 shrink-0">
             <Image
